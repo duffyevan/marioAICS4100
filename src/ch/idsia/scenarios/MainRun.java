@@ -74,7 +74,7 @@ public class MainRun
         //    AgentsPool.addAgent(new SlowAgent());
 //            AgentsPool.addAgent(new AStarAgent());
 //            AgentsPool.addAgent(new RjAgent());
-            AgentsPool.addAgent(new HumanKeyboardAgent());
+            AgentsPool.addAgent(new MyAIAgent());
             //AgentsPool.addAgent(new SergeyKarakovskiy_JumpingAgent());
         }
     }
