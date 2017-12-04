@@ -13,6 +13,7 @@ import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
 
 import java.util.List;
+import java.util.Random;
 
 import competition.cig.robinbaumgarten.AStarAgent;
 import competition.cig.sergeykarakovskiy.SergeyKarakovskiy_JumpingAgent;
@@ -81,8 +82,11 @@ public class MainRun
 
     public static void scoreAllAgents(CmdLineOptions cmdLineOptions)
     {
-        for (Agent agent : AgentsPool.getAgentsCollection())
-            score(agent, 3143, cmdLineOptions);
+        for (Agent agent : AgentsPool.getAgentsCollection()) {
+            int seed = new Random().nextInt();
+            System.out.println("Random Seed For This Level: " + seed);
+            score(agent, seed, cmdLineOptions);
+        }
     }
 
 
