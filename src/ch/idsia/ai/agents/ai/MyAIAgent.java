@@ -4,12 +4,17 @@ import ch.idsia.ai.agents.Agent;
 import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 
+import java.util.ArrayList;
 import java.util.Random;
+
+import static java.lang.Math.pow;
+import static java.lang.StrictMath.sqrt;
 
 public class MyAIAgent implements Agent{
     private final int FRAMES_TO_STOP = 20;
     private final int TILE_WIDTH = 32;
     private final int TILES_AHEAD_TO_JUMP = 1;
+    private final float MARIO_RUN_AWAY_DISTANCE = 50;
 
     private long frame = 0;
     private String name = "MyAIAgent";
@@ -18,6 +23,23 @@ public class MyAIAgent implements Agent{
     private Random random = new Random();
     private int stopCounter = 0;
     private int previousEnemies = 0;
+    private ArrayList<Enemy> enemies;
+
+    private class Enemy {
+        float x,y = 0;
+        Enemy(float x, float y){
+            this.x = x;
+            this.y = y;
+        }
+        double distanceTo(float x, float y){
+            return sqrt(pow(x-this.x,2)+pow(y-this.y,2));
+        }
+        @Override
+        public String toString() {
+            return "Enemy At (" + x + "," + y + ")";
+        }
+    }
+
     /**
      * Reset the Agent
      */
@@ -76,6 +98,22 @@ public class MyAIAgent implements Agent{
 //        if (observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length != 0){
 //            action[Mario.KEY_JUMP] = true;
 //        }
+        decodeEnemies(observation);
+
+        if (observation.getEnemiesFloatPos().length > 0){
+            for (Enemy e : enemies){
+                if (e.distanceTo(observation.getMarioFloatPos()[0],observation.getMarioFloatPos()[1]) < MARIO_RUN_AWAY_DISTANCE) {
+                    int die = random.nextInt(20);
+                    if (die > 18) {
+                        action[Mario.KEY_JUMP] = true; // try to jump over
+                        action[Mario.KEY_RIGHT] = true;
+                    } else {
+                        action[Mario.KEY_LEFT] = true; // run away
+                        action[Mario.KEY_RIGHT] = false;
+                    }
+                }
+            }
+        }
 
         return action; // give back our array of actions for this frame.
     }
@@ -105,5 +143,16 @@ public class MyAIAgent implements Agent{
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    void decodeEnemies(Environment observation){
+        try {
+            enemies = new ArrayList<Enemy>();
+            for (int i = 1; i < observation.getEnemiesFloatPos().length; i += 2) {
+                enemies.add(new Enemy(observation.getEnemiesFloatPos()[i], observation.getEnemiesFloatPos()[i + 1]));
+            }
+        } catch (ArrayIndexOutOfBoundsException e){
+            enemies = new ArrayList<Enemy>();
+        }
     }
 }
