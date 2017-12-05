@@ -49,9 +49,14 @@ public class MyAIAgent implements Agent{
     }
 
 
-    public void moveMarioInRightDir(int targetDir){
+    public void moveMarioInCorrectDir(int targetDir){
         switch (targetDir){
-            case 1:
+            case 1: action[Mario.KEY_RIGHT] = true;
+                action[Mario.KEY_LEFT] = false;
+                break;
+            case -1: action[Mario.KEY_LEFT] = true;
+                action[Mario.KEY_RIGHT] = false;
+                break;
         }
     }
 
@@ -62,7 +67,8 @@ public class MyAIAgent implements Agent{
      */
     @Override
     public boolean[] getAction(Environment observation) {
-        targetDir = 1;
+        int targetDir = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
+
 
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         frame++;
@@ -76,24 +82,23 @@ public class MyAIAgent implements Agent{
             flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
         }
 
-        action[Mario.KEY_RIGHT] = true;
+        moveMarioInCorrectDir(targetDir);
 
         //if there is something a few tiles ahead of mario, jump
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
-                    if (scene[11+i][13] != 0 || scene[11+i][12] != 0) {
+
+                    if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
                         action[Mario.KEY_JUMP] = true; // jump and move right
-                        action[Mario.KEY_RIGHT] = true;
+                        moveMarioInCorrectDir(targetDir);
                     }
             }
         }
         else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
             action[Mario.KEY_JUMP] = true; // hold the jump key for a higher jump
-            action[Mario.KEY_RIGHT] = true; // hold the right key to keep moving right
-        }
+            moveMarioInCorrectDir(targetDir);        }
         else { // if mario is on the ground and may not jump
-            action[Mario.KEY_RIGHT] = true; // keep moving right tho
-        }
+            moveMarioInCorrectDir(targetDir);        }
 
         if (stopCounter >= 0){
             action[Mario.KEY_RIGHT] = false;
@@ -116,10 +121,10 @@ public class MyAIAgent implements Agent{
                     int die = random.nextInt(20);
                     if (die > 18) {
                         action[Mario.KEY_JUMP] = true; // try to jump over
-                        action[Mario.KEY_RIGHT] = true;
+                        moveMarioInCorrectDir(targetDir);
                     } else {
                         action[Mario.KEY_LEFT] = true; // run away
-                        action[Mario.KEY_RIGHT] = false;
+                        moveMarioInCorrectDir(-targetDir);
                     }
                 }
             }
