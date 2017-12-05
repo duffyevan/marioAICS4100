@@ -48,6 +48,13 @@ public class MyAIAgent implements Agent{
         action = new boolean[Environment.numberOfButtons];
     }
 
+
+    public void moveMarioInRightDir(int targetDir){
+        switch (targetDir){
+            case 1:
+        }
+    }
+
     /**
      * Get the actions to perform for this turn
      * @param observation the current state on the screen
@@ -55,6 +62,8 @@ public class MyAIAgent implements Agent{
      */
     @Override
     public boolean[] getAction(Environment observation) {
+        targetDir = 1;
+
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         frame++;
         stopCounter--;
@@ -69,6 +78,7 @@ public class MyAIAgent implements Agent{
 
         action[Mario.KEY_RIGHT] = true;
 
+        //if there is something a few tiles ahead of mario, jump
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
                     if (scene[11+i][13] != 0 || scene[11+i][12] != 0) {
