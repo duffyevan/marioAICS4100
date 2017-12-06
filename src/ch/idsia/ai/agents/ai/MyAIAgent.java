@@ -5,7 +5,6 @@ import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 
 import java.util.ArrayList;
-import java.util.Observable;
 import java.util.Random;
 
 import static java.lang.Math.pow;
@@ -23,6 +22,8 @@ public class MyAIAgent implements Agent{
     private final double RANDOM_JUMP_CHANCE = .05;
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
     private final double FRAMES_WAIT_UNDER_PRIZE = 3;
+    private final int FLOWER_ID = 15;
+    private final int SHROOM_ID = 69; // FIXME this isnt the right ID I need to find the right one
 
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
@@ -32,17 +33,17 @@ public class MyAIAgent implements Agent{
     private Random random = new Random();
     private int stopCounter = 0;
     private int previousEnemies = 0;
-    private ArrayList<Enemy> enemies;
     private boolean wantsToOpenPrizes = true;
     private  int noOpenFrames;
     private int framesUnderPrize = 0;
 
+    private ArrayList<Entity> enemies;
 
     private int targetDir = 1;
 
-    private class Enemy {
+    private class Entity {
         float x,y = 0;
-        Enemy(float x, float y){
+        Entity(float x, float y){
             this.x = x;
             this.y = y;
         }
@@ -51,7 +52,7 @@ public class MyAIAgent implements Agent{
         }
         @Override
         public String toString() {
-            return "Enemy At (" + x + "," + y + ")";
+            return "Entity At (" + x + "," + y + ")";
         }
     }
 
@@ -120,7 +121,7 @@ public class MyAIAgent implements Agent{
         decodeEnemies(observation);
 
         if (observation.getEnemiesFloatPos().length > 0){
-            for (Enemy e : enemies){
+            for (Entity e : enemies){
                 if (e.distanceTo(observation.getMarioFloatPos()[0],observation.getMarioFloatPos()[1]) < MARIO_RUN_AWAY_DISTANCE) {
                     int die = random.nextInt(100);
                     if (die > PERCENT_CHANCE_JUMP_ON_ENEMY) {
@@ -203,13 +204,31 @@ public class MyAIAgent implements Agent{
     }
 
     /**
+     * return true if there are any flowers on the screen
+     * @param observation The environment from the engine
+     * @return true if there are any flowers in the scene
+     */
+    private ArrayList<Entity> powerUpsOnScreen(Environment observation) {
+        ArrayList<Entity> ret = new ArrayList<>();
+        byte [][]enemyScene = observation.getEnemiesObservation();
+        for (int y = 0; y < enemyScene.length; y++) {
+            for (int x = 0; x < enemyScene[0].length; x++) {
+                if (enemyScene[y][x] == FLOWER_ID || enemyScene[y][x] == SHROOM_ID){
+                    ret.add(new Entity(x,y));
+                }
+            }
+        }
+        return ret;
+    }
+
+
+    /**
      * Get the actions to perform for this turn
      * @param observation the current state on the screen
      * @return the actions we wish to perform this frame
      */
     @Override
     public boolean[] getAction(Environment observation) {
-
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         targetDir = 1;
         frame++;
@@ -256,12 +275,12 @@ public class MyAIAgent implements Agent{
 
     void decodeEnemies(Environment observation){
         try {
-            enemies = new ArrayList<Enemy>();
+            enemies = new ArrayList<Entity>();
             for (int i = 1; i < observation.getEnemiesFloatPos().length; i += 2) {
-                enemies.add(new Enemy(observation.getEnemiesFloatPos()[i], observation.getEnemiesFloatPos()[i + 1]));
+                enemies.add(new Entity(observation.getEnemiesFloatPos()[i], observation.getEnemiesFloatPos()[i + 1]));
             }
         } catch (ArrayIndexOutOfBoundsException e){
-            enemies = new ArrayList<Enemy>();
+            enemies = new ArrayList<Entity>();
         }
     }
 }
