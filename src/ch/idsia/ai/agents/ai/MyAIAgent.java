@@ -109,21 +109,6 @@ public class MyAIAgent implements Agent{
             action[Mario.KEY_LEFT] = false;
         }
 
-//        //if there is a pit, jump
-//        if (observation.mayMarioJump()) {
-//            for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
-//
-////                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
-//                if (scene[12][11+(random.nextInt(2)*targetDir)] ==  0) {//multiply in targetDir to check left or right(as necessary)
-//                    action[Mario.KEY_JUMP] = true; // jump and move right
-//                    moveMarioInCorrectDir(targetDir);
-//                }
-//            }
-//        }
-
-
-
-
         if (random.nextInt(100) < (observation.getEnemiesFloatPos().length - previousEnemies) * 100) {
             stopCounter = FRAMES_TO_STOP;
         }
