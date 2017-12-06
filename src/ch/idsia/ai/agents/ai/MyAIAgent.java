@@ -31,6 +31,8 @@ public class MyAIAgent implements Agent{
     private int stopCounter = 0;
     private int previousEnemies = 0;
     private ArrayList<Enemy> enemies;
+    private boolean wantsToOpenPrizes = true;
+    private  int noOpenFrames;
 
     private int targetDir = 1;
 
@@ -127,11 +129,27 @@ public class MyAIAgent implements Agent{
         }
     }
 
+    private void startNoOpenTimer(){
+        wantsToOpenPrizes = false;
+         noOpenFrames = random.nextInt(70)-10;
+        if(noOpenFrames < 0){
+           noOpenFrames = 0;
+        }
+    }
+
+    private void checkNoOpenTimer(){
+        noOpenFrames--;
+        if(noOpenFrames<=0){
+            wantsToOpenPrizes = true;
+        }
+    }
+
     //stops and jumps to open ? blocks
     private void openPrizeBlocks(byte[][] scene){
         //if ? block above, stop moving and jump
         for (int i = 0;i<TILES_UP_TO_BLOCKS;i++) {//for a colum of blocks from the bottom of the map
             for (int j = 0; j<TIMES_ADEAD_TO_SPOT_BLOCK;j++) {
+                if(wantsToOpenPrizes)
                 if (scene[10 - i][6+j] == 21) {//if ? block above and a bit to the left or right
                     if(6+j<MARIO_CENTER_X){
                         targetDir = -1;
@@ -140,11 +158,14 @@ public class MyAIAgent implements Agent{
                     }else{
                         targetDir = 0;
                         action[Mario.KEY_JUMP] = true;
+                        startNoOpenTimer();
                     }
                     break;
                 }
             }
         }
+
+        checkNoOpenTimer();
     }
 
     //randomly jumps to add human element and to avoid some bugs where he gets locked
