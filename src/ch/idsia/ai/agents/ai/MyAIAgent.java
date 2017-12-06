@@ -9,18 +9,20 @@ import java.util.Observable;
 import java.util.Random;
 
 import static java.lang.Math.pow;
+import static java.lang.Math.toRadians;
 import static java.lang.StrictMath.sqrt;
 
 public class MyAIAgent implements Agent{
     private final int FRAMES_TO_STOP = 20;
     private final int TILE_WIDTH = 32;
-    private final int TILES_AHEAD_TO_JUMP = 1;
+    private final int TILES_AHEAD_TO_JUMP = 3;
     private final float MARIO_RUN_AWAY_DISTANCE = 50;
     private final int TILES_UP_TO_BLOCKS = 9;
     private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
     private final int MARIO_CENTER_X = 11;//tested to be true
     private final double RANDOM_JUMP_CHANCE = .05;
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
+    private final double FRAMES_WAIT_UNDER_PRIZE = 3;
 
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
@@ -33,6 +35,8 @@ public class MyAIAgent implements Agent{
     private ArrayList<Enemy> enemies;
     private boolean wantsToOpenPrizes = true;
     private  int noOpenFrames;
+    private int framesUnderPrize = 0;
+
 
     private int targetDir = 1;
 
@@ -85,7 +89,8 @@ public class MyAIAgent implements Agent{
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
 
-                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
+//                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
+                if (scene[11][11+(i*targetDir)] != 0 || scene[10][11+(i*targetDir)] != 0) {//multiply in targetDir to check left or right(as necessary)
                     action[Mario.KEY_JUMP] = true; // jump and move right
                     moveMarioInCorrectDir(targetDir);
                 }
@@ -157,8 +162,13 @@ public class MyAIAgent implements Agent{
                         targetDir = 1;
                     }else{
                         targetDir = 0;
-                        action[Mario.KEY_JUMP] = true;
-                        startNoOpenTimer();
+                        if(framesUnderPrize > FRAMES_WAIT_UNDER_PRIZE) {//wait 1 frame of being under block to jump, otherwise he can jump wrongly
+                            action[Mario.KEY_JUMP] = true;
+                            startNoOpenTimer();
+                            framesUnderPrize = 0;
+                        }else{
+                            framesUnderPrize++;
+                        }
                     }
                     break;
                 }
@@ -176,11 +186,19 @@ public class MyAIAgent implements Agent{
 
     }
 
+    private void randomRun(){
+        //if(observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length<=0){
+
+        //}
+    }
+
     private void manageFire(Environment observation) {
         if (observation.getMarioMode() == 2) { // if mario is in fire mode
-            if (flame_toggle) // toggle pressed and not pressed
-                action[Mario.KEY_SPEED] = true; // press fire
-            flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
+            if(observation.getEnemiesFloatPos().length>0) {//if enemies on screen
+                if (flame_toggle) // toggle pressed and not pressed
+                    action[Mario.KEY_SPEED] = true; // press fire
+                flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
+            }
         }
     }
 
@@ -191,8 +209,6 @@ public class MyAIAgent implements Agent{
      */
     @Override
     public boolean[] getAction(Environment observation) {
-
-
 
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         targetDir = 1;
