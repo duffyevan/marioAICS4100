@@ -80,12 +80,7 @@ public class MyAIAgent implements Agent{
         }
     }
 
-
-    //move so that mario reacts to enemies and walls
-    private void smartMove(int targetDir, Environment observation, byte[][] scene){
-
-        moveMarioInCorrectDir(targetDir);
-
+    private void jumpOverWalls(Environment observation, byte[][] scene){
         //if there is something a few tiles ahead of mario, jump
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
@@ -103,7 +98,9 @@ public class MyAIAgent implements Agent{
             moveMarioInCorrectDir(targetDir);        }
         else { // if mario is on the ground and may not jump
             moveMarioInCorrectDir(targetDir);        }
+    }
 
+    private void reactToEnemies(Environment observation, byte[][] scene){
         if (stopCounter >= 0){
             action[Mario.KEY_RIGHT] = false;
             action[Mario.KEY_LEFT] = false;
@@ -132,6 +129,11 @@ public class MyAIAgent implements Agent{
                 }
             }
         }
+    }
+    //move so that mario reacts to enemies and walls
+    private void smartMove(int targetDir, Environment observation, byte[][] scene){
+
+
     }
 
     private void startNoOpenTimer(){
@@ -242,7 +244,11 @@ public class MyAIAgent implements Agent{
 
         manageFire(observation);
 
-        smartMove(targetDir, observation, scene);
+        moveMarioInCorrectDir(targetDir);
+
+        jumpOverWalls(observation,scene);
+
+        reactToEnemies(observation,scene);
 
         return action; // give back our array of actions for this frame.
     }
