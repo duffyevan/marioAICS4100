@@ -9,18 +9,20 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import static java.lang.Math.pow;
+import static java.lang.Math.toRadians;
 import static java.lang.StrictMath.sqrt;
 
 public class MyAIAgent implements Agent{
     private final int FRAMES_TO_STOP = 20;
     private final int TILE_WIDTH = 32;
-    private final int TILES_AHEAD_TO_JUMP = 1;
+    private final int TILES_AHEAD_TO_JUMP = 3;
     private final float MARIO_RUN_AWAY_DISTANCE = 50;
     private final int TILES_UP_TO_BLOCKS = 9;
     private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
     private final int MARIO_CENTER_X = 11;//tested to be true
     private final double RANDOM_JUMP_CHANCE = .05;
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
+    private final double FRAMES_WAIT_UNDER_PRIZE = 5;
     private final int FLOWER_ID = 15;
     private final int SHROOM_ID = 69; // FIXME this isnt the right ID I need to find the right one
     private final int MIN_FOLLOW_DISTANCE = 2;
@@ -33,6 +35,10 @@ public class MyAIAgent implements Agent{
     private Random random = new Random();
     private int stopCounter = 0;
     private int previousEnemies = 0;
+    private boolean wantsToOpenPrizes = true;
+    private  int noOpenFrames;
+    private int framesUnderPrize = 0;
+
     private ArrayList<Entity> enemies;
     private int timeTaken = 0;
 
@@ -77,30 +83,27 @@ public class MyAIAgent implements Agent{
         }
     }
 
-
-    //move so that mario reacts to enemies and walls
-    private void smartMove(int targetDir, Environment observation, byte[][] scene){
-
-        moveMarioInCorrectDir(targetDir);
-
+    private void jumpOverWalls(Environment observation, byte[][] scene){
         //if there is something a few tiles ahead of mario, jump
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
 
-                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
-                    action[Mario.KEY_JUMP] = true; // jump and move right
-                    moveMarioInCorrectDir(targetDir);
+//                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
+                if (scene[11][11+(i*targetDir)] != 0 || scene[10][11+(i*targetDir)] != 0) {//multiply in targetDir to check left or right(as necessary)
+                    if(scene[12][11+(1*targetDir)] != 0) {//if there is a cranny to fall into, dont jump
+                        action[Mario.KEY_JUMP] = true; // jump and move right
+                        moveMarioInCorrectDir(targetDir);
+                    }
                 }
             }
-        }
-
-
-        else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
+        }else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
             action[Mario.KEY_JUMP] = true; // hold the jump key for a higher jump
             moveMarioInCorrectDir(targetDir);        }
         else { // if mario is on the ground and may not jump
             moveMarioInCorrectDir(targetDir);        }
+    }
 
+    private void reactToEnemies(Environment observation, byte[][] scene){
         if (stopCounter >= 0){
             action[Mario.KEY_RIGHT] = false;
             action[Mario.KEY_LEFT] = false;
@@ -130,12 +133,33 @@ public class MyAIAgent implements Agent{
             }
         }
     }
+    //move so that mario reacts to enemies and walls
+    private void smartMove(int targetDir, Environment observation, byte[][] scene){
+
+
+    }
+
+    private void startNoOpenTimer(){
+        wantsToOpenPrizes = false;
+         noOpenFrames = random.nextInt(70)-10;
+        if(noOpenFrames < 0){
+           noOpenFrames = 0;
+        }
+    }
+
+    private void checkNoOpenTimer(){
+        noOpenFrames--;
+        if(noOpenFrames<=0){
+            wantsToOpenPrizes = true;
+        }
+    }
 
     //stops and jumps to open ? blocks
     private void openPrizeBlocks(byte[][] scene){
         //if ? block above, stop moving and jump
         for (int i = 0;i<TILES_UP_TO_BLOCKS;i++) {//for a colum of blocks from the bottom of the map
             for (int j = 0; j<TIMES_ADEAD_TO_SPOT_BLOCK;j++) {
+                if(wantsToOpenPrizes)
                 if (scene[10 - i][6+j] == 21) {//if ? block above and a bit to the left or right
                     if(6+j<MARIO_CENTER_X){
                         targetDir = -1;
@@ -143,12 +167,20 @@ public class MyAIAgent implements Agent{
                         targetDir = 1;
                     }else{
                         targetDir = 0;
-                        action[Mario.KEY_JUMP] = true;
+                        if(framesUnderPrize > FRAMES_WAIT_UNDER_PRIZE) {//wait 1 frame of being under block to jump, otherwise he can jump wrongly
+                            action[Mario.KEY_JUMP] = true;
+                            startNoOpenTimer();
+                            framesUnderPrize = 0;
+                        }else{
+                            framesUnderPrize++;
+                        }
                     }
                     break;
                 }
             }
         }
+
+        checkNoOpenTimer();
     }
 
     //randomly jumps to add human element and to avoid some bugs where he gets locked
@@ -159,11 +191,19 @@ public class MyAIAgent implements Agent{
 
     }
 
+    private void randomRun(Environment observation){
+        if(observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length<=0){
+            action[Mario.KEY_SPEED] = true;
+        }
+    }
+
     private void manageFire(Environment observation) {
         if (observation.getMarioMode() == 2) { // if mario is in fire mode
-            if (flame_toggle) // toggle pressed and not pressed
-                action[Mario.KEY_SPEED] = true; // press fire
-            flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
+            if(observation.getEnemiesFloatPos().length>0) {//if enemies on screen
+                if (flame_toggle) // toggle pressed and not pressed
+                    action[Mario.KEY_SPEED] = true; // press fire
+                flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
+            }
         }
     }
 
@@ -199,6 +239,9 @@ public class MyAIAgent implements Agent{
         stopCounter--;
         byte[][] scene = observation.getLevelSceneObservation();
 
+        //each of these functions is a task, starting with the lowest priority task the highest priority task
+        randomRun(observation);
+
         randomJump();
 
         openPrizeBlocks(scene);
@@ -207,7 +250,11 @@ public class MyAIAgent implements Agent{
 
         manageFire(observation);
 
-        smartMove(targetDir, observation, scene);
+        moveMarioInCorrectDir(targetDir);
+
+        jumpOverWalls(observation,scene);
+
+        reactToEnemies(observation,scene);
 
         return action; // give back our array of actions for this frame.
     }
