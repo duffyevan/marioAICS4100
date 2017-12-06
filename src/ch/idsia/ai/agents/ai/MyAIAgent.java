@@ -4,6 +4,7 @@ import ch.idsia.ai.agents.Agent;
 import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -22,7 +23,8 @@ public class MyAIAgent implements Agent{
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
     private final int FLOWER_ID = 15;
     private final int SHROOM_ID = 69; // FIXME this isnt the right ID I need to find the right one
-
+    private final int MIN_FOLLOW_DISTANCE = 2;
+    private final int TIME_TOO_LONG = 400;
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
     private String name = "MyAIAgent";
@@ -32,6 +34,7 @@ public class MyAIAgent implements Agent{
     private int stopCounter = 0;
     private int previousEnemies = 0;
     private ArrayList<Entity> enemies;
+    private int timeTaken = 0;
 
     private int targetDir = 1;
 
@@ -200,11 +203,35 @@ public class MyAIAgent implements Agent{
 
         openPrizeBlocks(scene);
 
+        chasePowerUps(observation);
+
         manageFire(observation);
 
         smartMove(targetDir, observation, scene);
 
         return action; // give back our array of actions for this frame.
+    }
+
+    private void chasePowerUps(Environment observation){
+        ArrayList<Entity> powerUps = powerUpsOnScreen(observation);
+        if (powerUps.size() > 0 && Math.abs(powerUps.get(0).x - 11) > MIN_FOLLOW_DISTANCE) {
+            if (timeTaken != TIME_TOO_LONG) {
+                timeTaken++;
+                if (11 > powerUps.get(0).y){ // if were below it
+                    if (observation.getLevelSceneObservation()[9][11] == 0 && observation.getLevelSceneObservation()[8][11] == 0) { // if there's air above head
+                        targetDir = (powerUps.get(0).x > 11) ? 1 : -1; // move toward and jump
+                        action[Mario.KEY_JUMP] = true;
+                    } else {
+                        targetDir = (powerUps.get(0).x > 11) ? -1 : 1; // move away
+                    }
+                } else { // if were above or on the same level
+                    targetDir = (powerUps.get(0).x > 11) ? 1 : -1; // move toward
+                }
+            }
+        }
+        else if (powerUps.size() == 0){
+            timeTaken = 0;
+        }
     }
 
     /**
