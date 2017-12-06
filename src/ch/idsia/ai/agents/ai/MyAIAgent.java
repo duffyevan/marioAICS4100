@@ -21,7 +21,7 @@ public class MyAIAgent implements Agent{
     private final int MARIO_CENTER_X = 11;//tested to be true
     private final double RANDOM_JUMP_CHANCE = .05;
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
-    private final double FRAMES_WAIT_UNDER_PRIZE = 3;
+    private final double FRAMES_WAIT_UNDER_PRIZE = 5;
     private final int FLOWER_ID = 15;
     private final int SHROOM_ID = 69; // FIXME this isnt the right ID I need to find the right one
 
@@ -92,14 +92,13 @@ public class MyAIAgent implements Agent{
 
 //                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
                 if (scene[11][11+(i*targetDir)] != 0 || scene[10][11+(i*targetDir)] != 0) {//multiply in targetDir to check left or right(as necessary)
-                    action[Mario.KEY_JUMP] = true; // jump and move right
-                    moveMarioInCorrectDir(targetDir);
+                    if(scene[12][11+(1*targetDir)] != 0) {//if there is a cranny to fall into, dont jump
+                        action[Mario.KEY_JUMP] = true; // jump and move right
+                        moveMarioInCorrectDir(targetDir);
+                    }
                 }
             }
-        }
-
-
-        else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
+        }else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
             action[Mario.KEY_JUMP] = true; // hold the jump key for a higher jump
             moveMarioInCorrectDir(targetDir);        }
         else { // if mario is on the ground and may not jump
@@ -109,6 +108,21 @@ public class MyAIAgent implements Agent{
             action[Mario.KEY_RIGHT] = false;
             action[Mario.KEY_LEFT] = false;
         }
+
+//        //if there is a pit, jump
+//        if (observation.mayMarioJump()) {
+//            for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
+//
+////                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
+//                if (scene[12][11+(random.nextInt(2)*targetDir)] ==  0) {//multiply in targetDir to check left or right(as necessary)
+//                    action[Mario.KEY_JUMP] = true; // jump and move right
+//                    moveMarioInCorrectDir(targetDir);
+//                }
+//            }
+//        }
+
+
+
 
         if (random.nextInt(100) < (observation.getEnemiesFloatPos().length - previousEnemies) * 100) {
             stopCounter = FRAMES_TO_STOP;
@@ -187,10 +201,10 @@ public class MyAIAgent implements Agent{
 
     }
 
-    private void randomRun(){
-        //if(observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length<=0){
-
-        //}
+    private void randomRun(Environment observation){
+        if(observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length<=0){
+            action[Mario.KEY_SPEED] = true;
+        }
     }
 
     private void manageFire(Environment observation) {
@@ -234,6 +248,8 @@ public class MyAIAgent implements Agent{
         frame++;
         stopCounter--;
         byte[][] scene = observation.getLevelSceneObservation();
+
+        randomRun(observation);
 
         randomJump();
 
