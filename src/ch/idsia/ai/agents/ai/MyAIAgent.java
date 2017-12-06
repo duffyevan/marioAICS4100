@@ -5,6 +5,7 @@ import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 
 import java.util.ArrayList;
+import java.util.Observable;
 import java.util.Random;
 
 import static java.lang.Math.pow;
@@ -18,6 +19,7 @@ public class MyAIAgent implements Agent{
     private final int TILES_UP_TO_BLOCKS = 9;
     private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
     private final int MARIO_CENTER_X = 11;//tested to be true
+    private final double RANDOM_JUMP_CHANCE = .05;
 
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
@@ -126,6 +128,7 @@ public class MyAIAgent implements Agent{
         }
     }
 
+
     /**
      * Get the actions to perform for this turn
      * @param observation the current state on the screen
@@ -135,12 +138,18 @@ public class MyAIAgent implements Agent{
     public boolean[] getAction(Environment observation) {
 
 
+
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         targetDir = 1;
         frame++;
         stopCounter--;
         byte[][] scene = observation.getLevelSceneObservation();
 
+
+        //randomly jumps to add human element and to avoid some bugs where he gets locked
+        if(random.nextFloat()<RANDOM_JUMP_CHANCE){
+            action[Mario.KEY_JUMP] = true;
+        }
 
         //if ? block above, stop moving and jump
         for (int i = 0;i<TILES_UP_TO_BLOCKS;i++) {//for a colum of blocks from the bottom of the map
@@ -149,7 +158,7 @@ public class MyAIAgent implements Agent{
                     if(6+j<MARIO_CENTER_X){
                         targetDir = -1;
                     }else if (6+j>MARIO_CENTER_X){
-                        targetDir = 1;
+                         targetDir = 1;
                     }else{
                         targetDir = 0;
                         action[Mario.KEY_JUMP] = true;

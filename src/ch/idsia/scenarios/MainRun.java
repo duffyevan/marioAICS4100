@@ -83,7 +83,8 @@ public class MainRun
     public static void scoreAllAgents(CmdLineOptions cmdLineOptions)
     {
         for (Agent agent : AgentsPool.getAgentsCollection()) {
-            int seed = new Random().nextInt();
+//            int seed = new Random().nextInt();
+            int seed =429681250;
             System.out.println("Random Seed For This Level: " + seed);
             score(agent, seed, cmdLineOptions);
         }
