@@ -20,6 +20,7 @@ public class MyAIAgent implements Agent{
     private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
     private final int MARIO_CENTER_X = 11;//tested to be true
     private final double RANDOM_JUMP_CHANCE = .05;
+    private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
 
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
@@ -116,8 +117,8 @@ public class MyAIAgent implements Agent{
         if (observation.getEnemiesFloatPos().length > 0){
             for (Enemy e : enemies){
                 if (e.distanceTo(observation.getMarioFloatPos()[0],observation.getMarioFloatPos()[1]) < MARIO_RUN_AWAY_DISTANCE) {
-                    int die = random.nextInt(20);
-                    if (die > 18) {
+                    int die = random.nextInt(100);
+                    if (die > PERCENT_CHANCE_JUMP_ON_ENEMY) {
                         action[Mario.KEY_JUMP] = true; // try to jump over
                         moveMarioInCorrectDir(targetDir);
                     } else {
