@@ -236,6 +236,7 @@ public class MyAIAgent implements Agent{
         stopCounter--;
         byte[][] scene = observation.getLevelSceneObservation();
 
+        //each of these functions is a task, starting with the lowest priority task the highest priority task
         randomRun(observation);
 
         randomJump();
