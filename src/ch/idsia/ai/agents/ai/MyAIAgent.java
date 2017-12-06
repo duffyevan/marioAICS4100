@@ -15,8 +15,12 @@ public class MyAIAgent implements Agent{
     private final int TILE_WIDTH = 32;
     private final int TILES_AHEAD_TO_JUMP = 1;
     private final float MARIO_RUN_AWAY_DISTANCE = 50;
+    private final int TILES_UP_TO_BLOCKS = 9;
+    private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
+    private final int MARIO_CENTER_X = 11;//tested to be true
 
-    private long frame = 0;
+
+    private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
     private String name = "MyAIAgent";
     private boolean[] action;
     private boolean flame_toggle = false;
@@ -24,6 +28,8 @@ public class MyAIAgent implements Agent{
     private int stopCounter = 0;
     private int previousEnemies = 0;
     private ArrayList<Enemy> enemies;
+
+    private int targetDir = 1;
 
     private class Enemy {
         float x,y = 0;
@@ -49,6 +55,7 @@ public class MyAIAgent implements Agent{
     }
 
 
+    //based on target dir, move mario left or right
     public void moveMarioInCorrectDir(int targetDir){
         switch (targetDir){
             case 1: action[Mario.KEY_RIGHT] = true;
@@ -57,30 +64,17 @@ public class MyAIAgent implements Agent{
             case -1: action[Mario.KEY_LEFT] = true;
                 action[Mario.KEY_RIGHT] = false;
                 break;
+            case 0: action[Mario.KEY_LEFT] = false;
+                action[Mario.KEY_RIGHT] = false;
+                break;
         }
     }
 
-    /**
-     * Get the actions to perform for this turn
-     * @param observation the current state on the screen
-     * @return the actions we wish to perform this frame
-     */
-    @Override
-    public boolean[] getAction(Environment observation) {
-        int targetDir = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
+
+    //move so that mario reacts to enemies and walls
+    private void smartMove(int targetDir, Environment observation, byte[][] scene){
 
 
-        reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
-        frame++;
-        stopCounter--;
-
-        byte[][] scene = observation.getLevelSceneObservation();
-
-        if (observation.getMarioMode() == 2) { // if mario is in fire mode
-            if (flame_toggle) // toggle pressed and not pressed
-                action[Mario.KEY_SPEED] = true; // press fire
-            flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
-        }
 
         moveMarioInCorrectDir(targetDir);
 
@@ -88,12 +82,14 @@ public class MyAIAgent implements Agent{
         if (observation.mayMarioJump()) {
             for (int i = 0; i < TILES_AHEAD_TO_JUMP; i++) {
 
-                    if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
-                        action[Mario.KEY_JUMP] = true; // jump and move right
-                        moveMarioInCorrectDir(targetDir);
-                    }
+                if (scene[11+(i*targetDir)][13] != 0 || scene[11+(i*targetDir)][12] != 0) {//multiply in targetDir to check left or right(as necessary)
+                    action[Mario.KEY_JUMP] = true; // jump and move right
+                    moveMarioInCorrectDir(targetDir);
+                }
             }
         }
+
+
         else if (!observation.isMarioOnGround()){ // if mario may not jump and is not on the ground
             action[Mario.KEY_JUMP] = true; // hold the jump key for a higher jump
             moveMarioInCorrectDir(targetDir);        }
@@ -123,12 +119,54 @@ public class MyAIAgent implements Agent{
                         action[Mario.KEY_JUMP] = true; // try to jump over
                         moveMarioInCorrectDir(targetDir);
                     } else {
-                        action[Mario.KEY_LEFT] = true; // run away
                         moveMarioInCorrectDir(-targetDir);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Get the actions to perform for this turn
+     * @param observation the current state on the screen
+     * @return the actions we wish to perform this frame
+     */
+    @Override
+    public boolean[] getAction(Environment observation) {
+
+
+        reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
+        targetDir = 1;
+        frame++;
+        stopCounter--;
+        byte[][] scene = observation.getLevelSceneObservation();
+
+
+        //if ? block above, stop moving and jump
+        for (int i = 0;i<TILES_UP_TO_BLOCKS;i++) {//for a colum of blocks from the bottom of the map
+            for (int j = 0; j<TIMES_ADEAD_TO_SPOT_BLOCK;j++) {
+                if (scene[10 - i][6+j] == 21) {//if ? block above and a bit to the left or right
+                    if(6+j<MARIO_CENTER_X){
+                        targetDir = -1;
+                    }else if (6+j>MARIO_CENTER_X){
+                        targetDir = 1;
+                    }else{
+                        targetDir = 0;
+                        action[Mario.KEY_JUMP] = true;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (observation.getMarioMode() == 2) { // if mario is in fire mode
+            if (flame_toggle) // toggle pressed and not pressed
+                action[Mario.KEY_SPEED] = true; // press fire
+            flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
+        }
+
+
+        smartMove(targetDir, observation, scene);
 
         return action; // give back our array of actions for this frame.
     }
