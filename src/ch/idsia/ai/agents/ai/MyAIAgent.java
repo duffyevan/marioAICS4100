@@ -4,19 +4,17 @@ import ch.idsia.ai.agents.Agent;
 import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 
 import static java.lang.Math.pow;
-import static java.lang.Math.toRadians;
 import static java.lang.StrictMath.sqrt;
 
 public class MyAIAgent implements Agent{
     private final int FRAMES_TO_STOP = 20;
     private final int TILE_WIDTH = 32;
     private final int TILES_AHEAD_TO_JUMP = 3;
-    private final float MARIO_RUN_AWAY_DISTANCE = 50;
+    private final float MARIO_RUN_AWAY_DISTANCE = 2;
     private final int TILES_UP_TO_BLOCKS = 9;
     private final int TIMES_ADEAD_TO_SPOT_BLOCK = 10;
     private final int MARIO_CENTER_X = 11;//tested to be true
@@ -24,9 +22,11 @@ public class MyAIAgent implements Agent{
     private final double PERCENT_CHANCE_JUMP_ON_ENEMY = 50;
     private final double FRAMES_WAIT_UNDER_PRIZE = 5;
     private final int FLOWER_ID = 15;
-    private final int SHROOM_ID = 69; // FIXME this isnt the right ID I need to find the right one
+    private final int SHROOM_ID = 14;
+    private final int LADDER_ID = 69; // FIXME this isnt the right ID I need to find the right one
     private final int MIN_FOLLOW_DISTANCE = 2;
-    private final int TIME_TOO_LONG = 400;
+    private final int TIME_TOO_LONG = 120;
+    private final int FRAMES_TO_STOP_FLOWER = 0;
 
     private long frame = 0;//1 mean mario tries to go right, -1 means left, 0 means stay still
     private String name = "MyAIAgent";
@@ -38,8 +38,10 @@ public class MyAIAgent implements Agent{
     private boolean wantsToOpenPrizes = true;
     private  int noOpenFrames;
     private int framesUnderPrize = 0;
+    private boolean wasUnderAir = true;
+    private int ignoreCounter = 0;
 
-    private ArrayList<Entity> enemies;
+    private ArrayList<Entity> enemies = new ArrayList<>();
     private int timeTaken = 0;
 
     private int targetDir = 1;
@@ -104,24 +106,19 @@ public class MyAIAgent implements Agent{
     }
 
     private void reactToEnemies(Environment observation, byte[][] scene){
-        if (stopCounter >= 0){
-            action[Mario.KEY_RIGHT] = false;
-            action[Mario.KEY_LEFT] = false;
-        }
 
-        if (random.nextInt(100) < (observation.getEnemiesFloatPos().length - previousEnemies) * 100) {
+
+        if (random.nextInt(100) < (enemies.size() - previousEnemies) * 100) {
             stopCounter = FRAMES_TO_STOP;
         }
-        previousEnemies = observation.getEnemiesFloatPos().length;
+        previousEnemies = enemies.size();
 
-//        if (observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length != 0){
-//            action[Mario.KEY_JUMP] = true;
-//        }
+
         decodeEnemies(observation);
 
-        if (observation.getEnemiesFloatPos().length > 0){
+        if (enemies.size() > 0){
             for (Entity e : enemies){
-                if (e.distanceTo(observation.getMarioFloatPos()[0],observation.getMarioFloatPos()[1]) < MARIO_RUN_AWAY_DISTANCE) {
+                if (e.distanceTo(11,11) < MARIO_RUN_AWAY_DISTANCE) {
                     int die = random.nextInt(100);
                     if (die > PERCENT_CHANCE_JUMP_ON_ENEMY) {
                         action[Mario.KEY_JUMP] = true; // try to jump over
@@ -192,14 +189,14 @@ public class MyAIAgent implements Agent{
     }
 
     private void randomRun(Environment observation){
-        if(observation.getMarioMode() != 2 && observation.getEnemiesFloatPos().length<=0){
+        if(observation.getMarioMode() != 2 && enemies.size()<=0){
             action[Mario.KEY_SPEED] = true;
         }
     }
 
     private void manageFire(Environment observation) {
         if (observation.getMarioMode() == 2) { // if mario is in fire mode
-            if(observation.getEnemiesFloatPos().length>0) {//if enemies on screen
+            if(enemies.size()>0) {//if enemies on screen
                 if (flame_toggle) // toggle pressed and not pressed
                     action[Mario.KEY_SPEED] = true; // press fire
                 flame_toggle = !flame_toggle; // rapid fire fireballs rather than hold the button
@@ -233,6 +230,7 @@ public class MyAIAgent implements Agent{
      */
     @Override
     public boolean[] getAction(Environment observation) {
+//        System.out.println(enemySceneToString(observation));
         reset(); // clear out the action array (idk if this causes a memory leak, I assume java will take care of it)
         targetDir = 1;
         frame++;
@@ -256,19 +254,37 @@ public class MyAIAgent implements Agent{
 
         reactToEnemies(observation,scene);
 
+
+
+        if (stopCounter >= 0){
+            action[Mario.KEY_RIGHT] = false;
+            action[Mario.KEY_LEFT] = false;
+        }
+
+//        System.out.println(enemies);
         return action; // give back our array of actions for this frame.
+    }
+
+    private void jumpAtLadder(){
+
     }
 
     private void chasePowerUps(Environment observation){
         ArrayList<Entity> powerUps = powerUpsOnScreen(observation);
-        if (powerUps.size() > 0 && Math.abs(powerUps.get(0).x - 11) > MIN_FOLLOW_DISTANCE) {
+        if (ignoreCounter > 0)
+            ignoreCounter--;
+        if (powerUps.size() > 0 && ignoreCounter == 0) {
             if (timeTaken != TIME_TOO_LONG) {
                 timeTaken++;
-                if (11 > powerUps.get(0).y){ // if were below it
-                    if (observation.getLevelSceneObservation()[9][11] == 0 && observation.getLevelSceneObservation()[8][11] == 0) { // if there's air above head
+                if (11 > powerUps.get(0).y && observation.isMarioOnGround()){ // if were below it
+                    if (observation.getLevelSceneObservation()[9][11] == 0 && observation.getLevelSceneObservation()[8][11] == 0 && observation.getLevelSceneObservation()[8][11-targetDir] == 0) { // if there's air above head
+                        if (!wasUnderAir)
+                            ignoreCounter = FRAMES_TO_STOP_FLOWER;
+                        wasUnderAir = true;
                         targetDir = (powerUps.get(0).x > 11) ? 1 : -1; // move toward and jump
                         action[Mario.KEY_JUMP] = true;
                     } else {
+                        wasUnderAir = false;
                         targetDir = (powerUps.get(0).x > 11) ? -1 : 1; // move away
                     }
                 } else { // if were above or on the same level
@@ -309,13 +325,36 @@ public class MyAIAgent implements Agent{
     }
 
     void decodeEnemies(Environment observation){
-        try {
-            enemies = new ArrayList<Entity>();
-            for (int i = 1; i < observation.getEnemiesFloatPos().length; i += 2) {
-                enemies.add(new Entity(observation.getEnemiesFloatPos()[i], observation.getEnemiesFloatPos()[i + 1]));
+        enemies = new ArrayList<Entity>();
+        byte [][]enemyScene = observation.getEnemiesObservation();
+        for (int y = 0; y < enemyScene.length; y++) {
+            for (int x = 0; x < enemyScene[0].length; x++) {
+                if (enemyScene[y][x] == 2 || enemyScene[y][x] == 12){ // red guy is 2, piranah is 12
+                    enemies.add(new Entity(x,y));
+                }
             }
-        } catch (ArrayIndexOutOfBoundsException e){
-            enemies = new ArrayList<Entity>();
         }
+    }
+
+    private int getLadderX(Environment observation){
+        for (int y = 0; y < observation.getEnemiesObservation().length; y++){
+            for (int x = 0; x < observation.getEnemiesObservation()[0].length; x++){
+                if (observation.getEnemiesObservation()[y][x] == LADDER_ID)
+                    return x;
+            }
+        }
+        return -1;
+    }
+
+    String enemySceneToString(Environment observation){
+        byte [][]enemyScene = observation.getEnemiesObservation();
+        String ret = "";
+        for (byte [] c : enemyScene){
+            for (byte b : c){
+                ret += b + ",";
+            }
+            ret += "\n";
+        }
+        return ret;
     }
 }
