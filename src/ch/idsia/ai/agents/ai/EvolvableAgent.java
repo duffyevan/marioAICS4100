@@ -15,12 +15,12 @@ import java.util.Random;
  */
 public class EvolvableAgent implements Agent, Evolvable {
     private final int numberOfActions = 5000;
-    private final float chanceToMutateFrame = 0.05f;
-    private final float chanceToChangeGivenAction = 0.4f;
+    private final float chanceToMutateFrame = 0.1f;
+    private final float chanceToChangeGivenAction = 0.1f;
 
-    private Random random = new Random();
+    protected Random random = new Random();
     private int frameCounter = 0;
-    private boolean actions[][] = new boolean[numberOfActions][Environment.numberOfButtons];
+    protected boolean actions[][] = new boolean[numberOfActions][Environment.numberOfButtons];
     protected String name = "Evolvable Agent";
 
 
@@ -34,7 +34,7 @@ public class EvolvableAgent implements Agent, Evolvable {
         boolean actionsCopy[][] = new boolean[numberOfActions][Environment.numberOfButtons];
         for (int i = 0; i < actions.length; i ++){
             for (int j = 0; j < actions[i].length; j++){
-                actionsCopy[i][j] = actionsCopy[i][j];
+                actionsCopy[i][j] = actions[i][j];
             }
         }
         return new EvolvableAgent(actionsCopy);
