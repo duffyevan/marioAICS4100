@@ -16,7 +16,13 @@ public class RightwardsEvolvableAgent extends EvolvableAgent implements Agent
 
     private final float CHANCE_TO_INIT_RIGHT = .9f;
     private final float CHANCE_TO_INIT_LEFT = .05f;
+
 public RightwardsEvolvableAgent(){
+    super();
+}
+
+@Override
+protected void init(){
     for (int i = 0; i < actions.length; i ++){
         for (int j = 0; j < actions[i].length; j++){
             //special cases to get mario tend to go right
@@ -26,7 +32,6 @@ public RightwardsEvolvableAgent(){
                 actions[i][j] = random.nextFloat() < CHANCE_TO_INIT_RIGHT;
             }else{
                 actions[i][j] = random.nextBoolean();
-
             }
         }
     }

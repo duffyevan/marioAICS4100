@@ -49,6 +49,10 @@ public class EvolvableAgent implements Agent, Evolvable {
     }
 
     public EvolvableAgent() {
+        init();
+    }
+
+    protected void init(){
         for (int i = 0; i < actions.length; i ++){
             for (int j = 0; j < actions[i].length; j++){
                 actions[i][j] = random.nextBoolean();
