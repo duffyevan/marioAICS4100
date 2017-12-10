@@ -14,8 +14,8 @@ import java.util.Random;
  * Package: ch.idsia.ai.agents.ai;
  */
 public class EvolvableAgent implements Agent, Evolvable {
-    private final int numberOfActions = 100;
-    private final float chanceToMutateFrame = 0.05f;
+    private final int numberOfActions = 5000;
+    private final float chanceToMutateFrame = 0.4f;
     private final float chanceToChangeGivenAction = 0.4f;
 
     private Random random = new Random();
@@ -42,10 +42,15 @@ public class EvolvableAgent implements Agent, Evolvable {
         this.actions = actions;
     }
 
-    private EvolvableAgent() {
-        for (boolean a[] : actions) {
-            for (boolean b : a) { // randomly change frame
-                b = random.nextBoolean();
+    public EvolvableAgent() {
+//        for (boolean a[] : actions) {
+//            for (boolean b : a) { // randomly change frame
+//                b = random.nextBoolean();
+//            }
+//        }
+        for (int i = 0; i < actions.length; i ++){
+            for (int j = 0; j < actions[i].length; j++){
+                actions[i][j] = random.nextBoolean();
             }
         }
     }
@@ -68,6 +73,8 @@ public class EvolvableAgent implements Agent, Evolvable {
     }
 
     public boolean[] getAction(Environment observation) {
+        if (frameCounter >= numberOfActions)
+            reset();
         return actions[frameCounter++];
 //        return new boolean[Environment.numberOfButtons]; // Empty action
     }

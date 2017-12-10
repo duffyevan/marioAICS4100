@@ -2,6 +2,7 @@ package ch.idsia.scenarios;
 
 import ch.idsia.ai.Evolvable;
 import ch.idsia.ai.agents.Agent;
+import ch.idsia.ai.agents.ai.EvolvableAgent;
 import ch.idsia.ai.agents.ai.SimpleMLPAgent;
 import ch.idsia.ai.ea.ES;
 import ch.idsia.ai.tasks.ProgressTask;
@@ -22,8 +23,9 @@ import java.util.List;
  */
 public class Evolve {
 
-    final static int generations = 100;
+    final static int generations = 1000;
     final static int populationSize = 100;
+    final static int generationToShow = 100;
 
 
     public static void main(String[] args) {
@@ -35,7 +37,7 @@ public class Evolve {
         for (int difficulty = 0; difficulty < 11; difficulty++)
         {
             System.out.println("New Evolve phase with difficulty = " + difficulty + " started.");
-            Evolvable initial = new SimpleMLPAgent();
+            Evolvable initial = new EvolvableAgent();
 
             options.setLevelDifficulty(difficulty);
             options.setAgent((Agent)initial);
@@ -51,7 +53,7 @@ public class Evolve {
                 double bestResult = es.getBestFitnesses()[0];
 //                LOGGER.println("Generation " + gen + " best " + bestResult, LOGGER.VERBOSE_MODE.INFO);
                 System.out.println("Generation " + gen + " best " + bestResult);
-                options.setVisualization(gen % 5 == 0 || bestResult > 4000);
+                options.setVisualization(gen % generationToShow == 0 || bestResult > 4000);
                 options.setMaxFPS(true);
                 Agent a = (Agent) es.getBests()[0];
                 a.setName(((Agent)initial).getName() + df.format(gen));
