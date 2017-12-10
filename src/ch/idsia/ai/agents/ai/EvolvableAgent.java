@@ -15,8 +15,8 @@ import java.util.Random;
  */
 public class EvolvableAgent implements Agent, Evolvable {
     private final int numberOfActions = 5000;
-    private final float chanceToMutateFrame = 0.4f;
-    private final float chanceToChangeGivenAction = 0.4f;
+    private final float chanceToMutateFrame = 0.7f;
+    private final float chanceToChangeGivenAction = 0.7f;
 
     private Random random = new Random();
     private int frameCounter = 0;
@@ -43,11 +43,6 @@ public class EvolvableAgent implements Agent, Evolvable {
     }
 
     public EvolvableAgent() {
-//        for (boolean a[] : actions) {
-//            for (boolean b : a) { // randomly change frame
-//                b = random.nextBoolean();
-//            }
-//        }
         for (int i = 0; i < actions.length; i ++){
             for (int j = 0; j < actions[i].length; j++){
                 actions[i][j] = random.nextBoolean();
@@ -61,11 +56,11 @@ public class EvolvableAgent implements Agent, Evolvable {
 
     @Override
     public void mutate() {
-        for (boolean a[] : actions) {
+        for (int i = 0; i < actions.length; i++) {
             if (random.nextFloat() < chanceToMutateFrame) {
-                for (boolean b : a) { // randomly change frame
+                for (int j = 0; j < actions[i].length; j++) { // randomly change frame
                     if (random.nextFloat() < chanceToChangeGivenAction) {
-                        b = !b;
+                        actions[i][j] = !actions[i][j];
                     }
                 }
             }
@@ -76,7 +71,6 @@ public class EvolvableAgent implements Agent, Evolvable {
         if (frameCounter >= numberOfActions)
             reset();
         return actions[frameCounter++];
-//        return new boolean[Environment.numberOfButtons]; // Empty action
     }
 
     public AGENT_TYPE getType() {
