@@ -15,8 +15,8 @@ import java.util.Random;
  */
 public class EvolvableAgent implements Agent, Evolvable {
     private final int numberOfActions = 5000;
-    private final float chanceToMutateFrame = 0.7f;
-    private final float chanceToChangeGivenAction = 0.7f;
+    private final float chanceToMutateFrame = 0.05f;
+    private final float chanceToChangeGivenAction = 0.4f;
 
     private Random random = new Random();
     private int frameCounter = 0;
@@ -31,7 +31,13 @@ public class EvolvableAgent implements Agent, Evolvable {
 
     @Override
     public Evolvable copy() {
-        return new EvolvableAgent(actions);
+        boolean actionsCopy[][] = new boolean[numberOfActions][Environment.numberOfButtons];
+        for (int i = 0; i < actions.length; i ++){
+            for (int j = 0; j < actions[i].length; j++){
+                actionsCopy[i][j] = actionsCopy[i][j];
+            }
+        }
+        return new EvolvableAgent(actionsCopy);
     }
 
     public EvolvableAgent(String s) {
