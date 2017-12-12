@@ -1,4 +1,4 @@
-package ch.idsia.ai.agents.ai;
+package ch.idsia.ai.agents.ai.Neural;
 
 import ch.idsia.ai.Evolvable;
 import ch.idsia.ai.agents.Agent;
