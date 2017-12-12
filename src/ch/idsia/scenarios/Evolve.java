@@ -27,15 +27,15 @@ public class Evolve {
     final static int generations = 1000;
     final static int populationSize = 400;
     final static int generationToShow = 100;
-
-
+    final static int STARGING_DIFFICULTY = 10;
+    
     public static void main(String[] args) {
         EvaluationOptions options = new CmdLineOptions(args);
         options.setNumberOfTrials(1);
         options.setPauseWorld(true);
         List<Agent> bestAgents = new ArrayList<Agent>();
         DecimalFormat df = new DecimalFormat("0000");
-        for (int difficulty = 0; difficulty < 11; difficulty++)
+        for (int difficulty = STARGING_DIFFICULTY; difficulty < 11; difficulty++)
         {
             System.out.println("New Evolve phase with difficulty = " + difficulty + " started.");
             Evolvable initial = new RightwardsEvolvableAgent();
