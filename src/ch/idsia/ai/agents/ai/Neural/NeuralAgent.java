@@ -53,11 +53,14 @@ public class NeuralAgent implements Agent, Evolvable {
     }
 
     @Override
-    public void mutate() { // fixme
-        neuralNet.mutate();
+    public void mutate() {
+//        neuralNet.mutate();
+        Thread t = new Thread(new MutateThread(neuralNet));
+        t.setName("Mutator");
+        t.start();
     }
 
-    public boolean[] getAction(Environment observation) { // FIXME
+    public boolean[] getAction(Environment observation) {
         return neuralNet.getActionsFromScene(observation.getLevelSceneObservation(), observation.getEnemiesObservation());
     }
 

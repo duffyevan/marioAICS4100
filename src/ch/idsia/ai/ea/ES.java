@@ -5,6 +5,8 @@ import ch.idsia.ai.Evolvable;
 import ch.idsia.ai.agents.Agent;
 import ch.idsia.ai.tasks.Task;
 
+import java.util.Set;
+
 /**
  * Created by IntelliJ IDEA.
  * User: julian
@@ -38,6 +40,16 @@ public class ES implements EA {
             population[i] = population[i - elite].copy();
             population[i].mutate();
             evaluate(i);
+        }
+        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+        for (Thread t : threadSet){
+            try {
+                if (t.getName().equals("Mutator")) {
+                    t.join();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         shuffle();
         sortPopulationByFitness();
