@@ -26,8 +26,8 @@ import java.util.List;
 public class Evolve {
 
     final static int generations = 1000;
-    final static int populationSize = 20;
-    final static int generationToShow = 100;
+    final static int populationSize = 100;
+    final static int generationToShow = 10;
     final static int STARGING_DIFFICULTY = 1;
 
     public static void main(String[] args) {

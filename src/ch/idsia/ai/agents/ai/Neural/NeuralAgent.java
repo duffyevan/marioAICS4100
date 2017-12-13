@@ -58,7 +58,7 @@ public class NeuralAgent implements Agent, Evolvable {
     }
 
     public boolean[] getAction(Environment observation) { // FIXME
-        return neuralNet.getActionsFromScene(observation.getLevelSceneObservation());
+        return neuralNet.getActionsFromScene(observation.getLevelSceneObservation(), observation.getEnemiesObservation());
     }
 
     public AGENT_TYPE getType() {

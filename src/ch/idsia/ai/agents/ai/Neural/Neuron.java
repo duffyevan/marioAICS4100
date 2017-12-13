@@ -9,11 +9,13 @@ import java.util.Random;
  */
 public class Neuron {
     Random rand = new Random();
-    protected float threshold;
+    protected float threshold = 1f;
     protected HashMap<Integer,Float> weights = new HashMap<>();
     protected NeuralNetwork owner;
     int id;
-    private final float CHANCE_TO_CHANGE_WEIGHT = .1f;
+    private final float CHANCE_TO_CHANGE_WEIGHT = 1f;
+
+
 
     public void mutateThreshold(float range){
         threshold = threshold + ((rand.nextFloat() * range)-(range/2));
@@ -27,11 +29,13 @@ public class Neuron {
         }
     }
 
+    //for init
     public Neuron(int id, NeuralNetwork owner){
         this.id = id;
         this.owner = owner;
     }
 
+    //for copying
     public Neuron(Neuron oldVer, NeuralNetwork newOwner){
         this.threshold = oldVer.threshold;
         this.weights = (HashMap)oldVer.weights.clone();

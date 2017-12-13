@@ -14,11 +14,11 @@ public class NeuralNetwork {
     private final int MIDDLE_NEURONS_NUM= 7;
     private final int FINAL_NEURONS_NUM = 5;
 
-    private final float CHANCE_TO_CHANGE_WEIGHTS = .1f;
-    private final float CHANCE_TO_CHANGE_THRESH = .1f;
+    private final float CHANCE_TO_CHANGE_WEIGHTS = .2f;
+    private final float CHANCE_TO_CHANGE_THRESH = .2f;
 
-    private final float RANGE_CHANGE_FOR_WEIGHT = 1f;
-    private final float RANGE_CHANGE_FOR_THRESH = 1f;
+    private final float RANGE_CHANGE_FOR_WEIGHT = 2f;
+    private final float RANGE_CHANGE_FOR_THRESH = 2f;
 
     private final float INIT_WEIGHT = 1.0f;
 
@@ -121,9 +121,22 @@ public class NeuralNetwork {
 
     }
 
-    public boolean[] getActionsFromScene(byte[][] scene){
-
+    public boolean[] getActionsFromScene(byte[][] worldScene, byte[][] enemyScene){
+        int[][] scene = new int[worldScene.length][worldScene[0].length];
         boolean[] output = new boolean[FINAL_NEURONS_NUM];
+        for (int i = 0; i < scene.length; i ++){
+            for (int j = 0; j < scene[0].length; j++){
+                if (worldScene[i][j] == 0){
+                    scene[i][j] = 0;
+                }
+                else if (worldScene[i][j] != 0){
+                    scene[i][j] = 1;
+                }
+                else if (enemyScene[i][j] != 0){
+                    scene[i][j] = -1; // FIXME maybe
+                }
+            }
+        }
         //populate edge neruons from surroundings
         edgeNeurons.get(0).setEdgeInput(scene[10][10]);
         edgeNeurons.get(1).setEdgeInput(scene[10][11]);
