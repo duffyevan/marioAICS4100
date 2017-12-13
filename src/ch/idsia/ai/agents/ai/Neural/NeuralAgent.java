@@ -14,14 +14,10 @@ import java.util.Random;
  * Package: ch.idsia.ai.agents.ai;
  */
 public class NeuralAgent implements Agent, Evolvable {
-    private final int numberOfActions = 5000;
-    private final float chanceToMutateFrame = 0.1f;
-    private final float chanceToChangeGivenAction = 0.1f;
 
     protected Random random = new Random();
-    private int frameCounter = 0;
-    protected boolean actions[][] = new boolean[numberOfActions][Environment.numberOfButtons];
-    protected String name = "Evolvable Agent";
+    protected String name = "Neural Agent";
+    private NeuralNetwork neuralNet = new NeuralNetwork();
 
 
     @Override
@@ -31,21 +27,17 @@ public class NeuralAgent implements Agent, Evolvable {
 
     @Override
     public Evolvable copy() {
-        boolean actionsCopy[][] = new boolean[numberOfActions][Environment.numberOfButtons];
-        for (int i = 0; i < actions.length; i ++){
-            for (int j = 0; j < actions[i].length; j++){
-                actionsCopy[i][j] = actions[i][j];
-            }
-        }
-        return new NeuralAgent(actionsCopy);
+        //make new copy of neural net
+        NeuralNetwork newNeuralNet = neuralNet.copy();
+        return new NeuralAgent(newNeuralNet);
     }
 
     public NeuralAgent(String s) {
         setName(s);
     }
 
-    public NeuralAgent(boolean actions[][]) {
-        this.actions = actions;
+    public NeuralAgent(NeuralNetwork nn) {
+        this.neuralNet = nn;
     }
 
     public NeuralAgent() {
@@ -53,34 +45,20 @@ public class NeuralAgent implements Agent, Evolvable {
     }
 
     protected void init(){
-        for (int i = 0; i < actions.length; i ++){
-            for (int j = 0; j < actions[i].length; j++){
-                actions[i][j] = random.nextBoolean();
-            }
-        }
+
     }
 
     public void reset() {
-        frameCounter = 0;// Empty action
+
     }
 
     @Override
-    public void mutate() {
-        for (int i = 0; i < actions.length; i++) {
-            if (random.nextFloat() < chanceToMutateFrame) {
-                for (int j = 0; j < actions[i].length; j++) { // randomly change frame
-                    if (random.nextFloat() < chanceToChangeGivenAction) {
-                        actions[i][j] = !actions[i][j];
-                    }
-                }
-            }
-        }
+    public void mutate() { // fixme
+        neuralNet.mutate();
     }
 
-    public boolean[] getAction(Environment observation) {
-        if (frameCounter >= numberOfActions)
-            reset();
-        return actions[frameCounter++];
+    public boolean[] getAction(Environment observation) { // FIXME
+        return neuralNet.getActionsFromScene(observation.getLevelSceneObservation());
     }
 
     public AGENT_TYPE getType() {

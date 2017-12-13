@@ -3,6 +3,7 @@ package ch.idsia.scenarios;
 import ch.idsia.ai.Evolvable;
 import ch.idsia.ai.agents.Agent;
 import ch.idsia.ai.agents.ai.EvolvableAgent;
+import ch.idsia.ai.agents.ai.Neural.NeuralAgent;
 import ch.idsia.ai.agents.ai.RightwardsEvolvableAgent;
 import ch.idsia.ai.agents.ai.SimpleMLPAgent;
 import ch.idsia.ai.ea.ES;
@@ -25,10 +26,10 @@ import java.util.List;
 public class Evolve {
 
     final static int generations = 1000;
-    final static int populationSize = 400;
+    final static int populationSize = 20;
     final static int generationToShow = 100;
-    final static int STARGING_DIFFICULTY = 10;
-    
+    final static int STARGING_DIFFICULTY = 1;
+
     public static void main(String[] args) {
         EvaluationOptions options = new CmdLineOptions(args);
         options.setNumberOfTrials(1);
@@ -38,7 +39,7 @@ public class Evolve {
         for (int difficulty = STARGING_DIFFICULTY; difficulty < 11; difficulty++)
         {
             System.out.println("New Evolve phase with difficulty = " + difficulty + " started.");
-            Evolvable initial = new RightwardsEvolvableAgent();
+            Evolvable initial = new NeuralAgent();
 
             options.setLevelDifficulty(difficulty);
             options.setAgent((Agent)initial);
