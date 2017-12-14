@@ -41,6 +41,7 @@ public class ES implements EA {
         }
         shuffle();
         sortPopulationByFitness();
+
     }
 
     private void evaluate(int which) {

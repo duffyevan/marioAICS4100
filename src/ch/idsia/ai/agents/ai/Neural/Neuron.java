@@ -47,12 +47,16 @@ public class Neuron {
         return new Neuron(this, owner);
     }
 
-    public HashMap<Integer, Float> getWeight() {
+    public HashMap<Integer, Float> getWeights() {
         return weights;
     }
 
-    public void setWeight(HashMap<Integer, Float> weight) {
+    public void setWeights(HashMap<Integer, Float> weight) {
         this.weights = weight;
+    }
+
+    public void setWeight(int ID, float weight){
+        this.weights.put(ID, weight);
     }
 
     //propogates upwards
@@ -81,6 +85,12 @@ public class Neuron {
         weights.put(n,newWeight);
     }
 
-
-
+    public String toJSON(){
+        String ret = "\"" + id + "\":{\n";
+        for (Integer i : weights.keySet()){
+            ret += "\"" + i + "\":\"" + weights.get(i) + "\",\n";
+        }
+        ret = ret.substring(0, ret.length()-2) + "\n}";
+        return ret;
+    }
 }

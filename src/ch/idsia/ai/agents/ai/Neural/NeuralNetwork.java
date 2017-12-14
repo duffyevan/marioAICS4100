@@ -155,4 +155,19 @@ public class NeuralNetwork {
 
         return output;
     }
+
+    public String toJSON(){
+        String ret = "{\n";
+        for (EdgeNeuron en : edgeNeurons){
+            ret += en.toJSON() + ",\n";
+        }
+        for (Neuron n : middleNeurons){
+            ret += n.toJSON() + ",\n";
+        }
+        for (Neuron n : finalNeurons){
+            ret += n.toJSON() + ",\n";
+        }
+        ret = ret.substring(0, ret.length()-2) + "\n}";
+        return ret;
+    }
 }

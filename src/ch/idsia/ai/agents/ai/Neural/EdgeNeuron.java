@@ -9,8 +9,8 @@ public class EdgeNeuron extends Neuron{
 
     @Deprecated
     @Override
-    public void setWeight(HashMap<Integer, Float> weight) {
-        super.setWeight(weight);
+    public void setWeights(HashMap<Integer, Float> weight) {
+        super.setWeights(weight);
     }
 
     public EdgeNeuron(int id, NeuralNetwork owner){
@@ -35,5 +35,10 @@ public class EdgeNeuron extends Neuron{
     @Override
     public EdgeNeuron copy(NeuralNetwork owner) {
         return new EdgeNeuron(id,owner);
+    }
+
+    @Override
+    public String toJSON() {
+        return "\"" + id + "\":{}";
     }
 }
