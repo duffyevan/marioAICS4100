@@ -39,6 +39,8 @@ public class EdgeNeuron extends Neuron{
 
     @Override
     public String toJSON() {
-        return "\"" + id + "\":{}";
+        return "\"" + id + "\":{\n" +
+                "\"t\":\"" + threshold + "\"\n"+
+                "}";
     }
 }

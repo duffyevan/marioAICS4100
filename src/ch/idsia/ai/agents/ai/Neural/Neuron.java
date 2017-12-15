@@ -87,6 +87,7 @@ public class Neuron {
 
     public String toJSON(){
         String ret = "\"" + id + "\":{\n";
+        ret += "\"t\":\"" + threshold + "\",\n";
         for (Integer i : weights.keySet()){
             ret += "\"" + i + "\":\"" + weights.get(i) + "\",\n";
         }

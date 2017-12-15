@@ -15,14 +15,13 @@ import java.util.Random;
  */
 public class NeuralAgent implements Agent, Evolvable {
 
-    protected Random random = new Random();
     protected String name = "Neural Agent";
     private NeuralNetwork neuralNet = new NeuralNetwork();
 
 
     @Override
     public Evolvable getNewInstance() {
-        return new NeuralAgent();
+        return this.copy();
     }
 
     @Override
@@ -32,12 +31,12 @@ public class NeuralAgent implements Agent, Evolvable {
         return new NeuralAgent(newNeuralNet);
     }
 
-    public NeuralAgent(String s) {
-        setName(s);
-    }
-
     public NeuralAgent(NeuralNetwork nn) {
         this.neuralNet = nn;
+    }
+
+    public NeuralAgent(String json){
+        this.neuralNet = FileParser.loadNetwork(json);
     }
 
     public NeuralAgent() {
@@ -71,5 +70,9 @@ public class NeuralAgent implements Agent, Evolvable {
 
     public void setName(String Name) {
         this.name = Name;
+    }
+
+    public NeuralNetwork getNeuralNet() {
+        return neuralNet;
     }
 }
