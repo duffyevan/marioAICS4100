@@ -2,6 +2,9 @@ package ch.idsia.scenarios;
 
 import ch.idsia.ai.Evolvable;
 import ch.idsia.ai.agents.Agent;
+import ch.idsia.ai.agents.ai.EvolvableAgent;
+import ch.idsia.ai.agents.ai.Neural.NeuralAgent;
+import ch.idsia.ai.agents.ai.RightwardsEvolvableAgent;
 import ch.idsia.ai.agents.ai.SimpleMLPAgent;
 import ch.idsia.ai.ea.ES;
 import ch.idsia.ai.tasks.ProgressTask;
@@ -10,6 +13,11 @@ import ch.idsia.tools.CmdLineOptions;
 import ch.idsia.tools.EvaluationOptions;
 import wox.serial.Easy;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +30,15 @@ import java.util.List;
  */
 public class Evolve {
 
-    final static int generations = 100;
+    final static int generations = 10000;
     final static int populationSize = 100;
+    final static int generationToShow = 10;
+    final static int STARGING_DIFFICULTY = 1;
 
+    final static boolean visualizeAll = false;
+    final static boolean startFromScratch = false;
+    final static String fileToStartFrom = "JSON_NN/gen215_d1best.json";
+    final static boolean changeDifficultyAfterWinning = false;
 
     public static void main(String[] args) {
         EvaluationOptions options = new CmdLineOptions(args);
@@ -32,27 +46,51 @@ public class Evolve {
         options.setPauseWorld(true);
         List<Agent> bestAgents = new ArrayList<Agent>();
         DecimalFormat df = new DecimalFormat("0000");
-        for (int difficulty = 0; difficulty < 11; difficulty++)
+        for (int difficulty = STARGING_DIFFICULTY; difficulty < 11; difficulty++)
         {
             System.out.println("New Evolve phase with difficulty = " + difficulty + " started.");
-            Evolvable initial = new SimpleMLPAgent();
+            Evolvable initial = null;
+            if (startFromScratch) {
+                initial = new NeuralAgent();
+            } else {
+                try { // uncomment this to load the initial from a file
+                    initial = new NeuralAgent(new String(Files.readAllBytes(Paths.get(fileToStartFrom)), "UTF-8"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
 
             options.setLevelDifficulty(difficulty);
             options.setAgent((Agent)initial);
 
+            Task task = new ProgressTask(options);
+
             options.setMaxFPS(true);
             options.setVisualization(false);
 
-            Task task = new ProgressTask(options);
             ES es = new ES (task, initial, populationSize);
-
             for (int gen = 0; gen < generations; gen++) {
                 es.nextGeneration();
                 double bestResult = es.getBestFitnesses()[0];
 //                LOGGER.println("Generation " + gen + " best " + bestResult, LOGGER.VERBOSE_MODE.INFO);
                 System.out.println("Generation " + gen + " best " + bestResult);
-                options.setVisualization(gen % 5 == 0 || bestResult > 4000);
-                options.setMaxFPS(true);
+                if (visualizeAll) {
+                    options.setVisualization(true);
+                    options.setMaxFPS(false);
+                } else {
+                    options.setVisualization(gen % generationToShow == 0 || bestResult > 4000);
+                    options.setMaxFPS(true);
+                }
+
+                // DONE log to JSON file
+                try {
+                    PrintWriter bestLog = new PrintWriter("JSON_NN/gen" + gen + "_d" + difficulty + "best.json", "UTF-8");
+                    bestLog.write(((NeuralAgent) es.getBests()[0]).getNeuralNet().toJSON());
+                    bestLog.close();
+                } catch (java.io.IOException e){
+                    e.printStackTrace();
+                }
                 Agent a = (Agent) es.getBests()[0];
                 a.setName(((Agent)initial).getName() + df.format(gen));
 //                AgentsPool.setCurrentAgent(a);
@@ -62,7 +100,7 @@ public class Evolve {
                 options.setVisualization(false);
                 options.setMaxFPS(true);
                 Easy.save (es.getBests()[0], "evolved.xml");
-                if (result > 4000)
+                if (changeDifficultyAfterWinning && result > 4000)
                     break; // Go to next difficulty.
             }
         }
@@ -87,5 +125,28 @@ public class Evolve {
 
         LOGGER.save("log.txt");*/
         System.exit(0);
+    }
+
+    /**
+     * Displays a single neural network loaded from a file
+     * @param filename The file to load from
+     * @param fast whether is should be max fps or not
+     */
+    static void run (String filename, boolean fast){
+        NeuralAgent n = null;
+        try {
+            n = new NeuralAgent(new String(Files.readAllBytes(Paths.get(filename)),"UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        EvaluationOptions options = new CmdLineOptions(new String[0]);
+        options.setLevelDifficulty(1);
+        options.setAgent((Agent)n);
+        options.setNumberOfTrials(1);
+        options.setPauseWorld(true);
+        options.setMaxFPS(fast);
+        Task task = new ProgressTask(options);
+        task.evaluate(n);
+
     }
 }
