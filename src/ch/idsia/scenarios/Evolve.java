@@ -32,10 +32,13 @@ public class Evolve {
 
     final static int generations = 10000;
     final static int populationSize = 100;
-    final static int generationToShow = 100;
+    final static int generationToShow = 10;
     final static int STARGING_DIFFICULTY = 1;
 
     final static boolean visualizeAll = false;
+    final static boolean startFromScratch = false;
+    final static String fileToStartFrom = "JSON_NN/gen215_d1best.json";
+    final static boolean changeDifficultyAfterWinning = false;
 
     public static void main(String[] args) {
         EvaluationOptions options = new CmdLineOptions(args);
@@ -47,13 +50,15 @@ public class Evolve {
         {
             System.out.println("New Evolve phase with difficulty = " + difficulty + " started.");
             Evolvable initial = null;
-            initial = new NeuralAgent();
-
-//            try { // uncomment this to load the initial from a file
-//                initial = new NeuralAgent(new String(Files.readAllBytes(Paths.get("JSON_NN/gen215_d1best.json")),"UTF-8"));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            if (startFromScratch) {
+                initial = new NeuralAgent();
+            } else {
+                try { // uncomment this to load the initial from a file
+                    initial = new NeuralAgent(new String(Files.readAllBytes(Paths.get(fileToStartFrom)), "UTF-8"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
 
             options.setLevelDifficulty(difficulty);
@@ -95,8 +100,8 @@ public class Evolve {
                 options.setVisualization(false);
                 options.setMaxFPS(true);
                 Easy.save (es.getBests()[0], "evolved.xml");
-//                if (result > 4000)
-//                    break; // Go to next difficulty.
+                if (changeDifficultyAfterWinning && result > 4000)
+                    break; // Go to next difficulty.
             }
         }
         /*// TODO: log dir / log dump dir option
