@@ -35,6 +35,8 @@ public class Evolve {
     final static int generationToShow = 100;
     final static int STARGING_DIFFICULTY = 1;
 
+    final static boolean visualizeAll = false;
+
     public static void main(String[] args) {
         EvaluationOptions options = new CmdLineOptions(args);
         options.setNumberOfTrials(1);
@@ -58,7 +60,6 @@ public class Evolve {
             options.setAgent((Agent)initial);
 
             Task task = new ProgressTask(options);
-//            task.evaluate((Agent)initial); // Uncomment this line to run the initial Network before starting evolution
 
             options.setMaxFPS(true);
             options.setVisualization(false);
@@ -69,12 +70,13 @@ public class Evolve {
                 double bestResult = es.getBestFitnesses()[0];
 //                LOGGER.println("Generation " + gen + " best " + bestResult, LOGGER.VERBOSE_MODE.INFO);
                 System.out.println("Generation " + gen + " best " + bestResult);
-
-//                options.setVisualization(gen % generationToShow == 0 || bestResult > 4000); // INFO: Uncomment this for the usual high speed evolution
-//                options.setMaxFPS(true);
-
-                options.setVisualization(true); // INFO: Uncomment this for a slow visualized run
-                options.setMaxFPS(false);
+                if (visualizeAll) {
+                    options.setVisualization(true);
+                    options.setMaxFPS(false);
+                } else {
+                    options.setVisualization(gen % generationToShow == 0 || bestResult > 4000);
+                    options.setMaxFPS(true);
+                }
 
                 // DONE log to JSON file
                 try {
